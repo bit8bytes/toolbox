@@ -1,3 +1,3 @@
-module bit8bytes.com/toolbox/hello
+module github.com/bit8bytes/toolbox/hello
 
 go 1.22.5

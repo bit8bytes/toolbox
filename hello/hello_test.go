@@ -3,7 +3,7 @@ package hello_test
 import (
 	"testing"
 
-	"bit8bytes.com/toolbox/hello"
+	"github.com/bit8bytes/toolbox/hello"
 )
 
 func TestPurpose(t *testing.T) {
