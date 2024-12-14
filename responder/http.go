@@ -135,3 +135,8 @@ func (h *HttpResponder) BadRequestResponse(w http.ResponseWriter, r *http.Reques
 func (h *HttpResponder) FailedValidationResponse(w http.ResponseWriter, r *http.Request, errors map[string]string) {
 	h.errorResponse(w, r, http.StatusUnprocessableEntity, errors)
 }
+
+func (h *HttpResponder) InvalidCredentialsResponse(w http.ResponseWriter, r *http.Request) {
+	message := "invalid authentication credentials"
+	h.errorResponse(w, r, http.StatusUnauthorized, message)
+}
