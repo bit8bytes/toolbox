@@ -28,6 +28,10 @@ func (u UUID) String() string {
 		u[0:4], u[4:6], u[6:8], u[8:10], u[10:16])
 }
 
+func (u UUID) FromBytes() []byte {
+	return u[:]
+}
+
 func (u *UUID) Scan(value interface{}) error {
 	bytes, ok := value.([]byte)
 	if !ok || len(bytes) != 16 {
