@@ -29,7 +29,7 @@ func (u UUID) String() string {
 }
 
 func (u UUID) ToBytes() []byte {
-	return u[:]
+	return u[:] // returns all bytes...
 }
 
 func (u *UUID) Scan(value interface{}) error {
