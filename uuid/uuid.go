@@ -28,7 +28,7 @@ func (u UUID) String() string {
 		u[0:4], u[4:6], u[6:8], u[8:10], u[10:16])
 }
 
-func (u UUID) FromBytes() []byte {
+func (u UUID) ToBytes() []byte {
 	return u[:]
 }
 
