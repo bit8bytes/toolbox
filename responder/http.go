@@ -140,3 +140,21 @@ func (h *HttpResponder) InvalidCredentialsResponse(w http.ResponseWriter, r *htt
 	message := "invalid authentication credentials"
 	h.errorResponse(w, r, http.StatusUnauthorized, message)
 }
+
+func (h *HttpResponder) InvalidBearerAuthenticationTokenResponse(w http.ResponseWriter, r *http.Request) {
+	// Note: We’re including a WWW-Authenticate: Bearer header here to help inform or remind the client
+	// that we expect them to authenticate using a bearer token.
+	w.Header().Set("WWW-Authenticate", "Bearer")
+
+	message := "invalid or missing authentication token"
+	h.errorResponse(w, r, http.StatusUnauthorized, message)
+}
+
+func (h *HttpResponder) InvalidCookieAuthenticationTokenResponse(w http.ResponseWriter, r *http.Request) {
+	// Note: We’re including a WWW-Authenticate: Bearer header here to help inform or remind the client
+	// that we expect them to authenticate using a bearer token.
+	w.Header().Set("WWW-Authenticate", "Cookie")
+
+	message := "invalid or missing authentication token"
+	h.errorResponse(w, r, http.StatusUnauthorized, message)
+}
