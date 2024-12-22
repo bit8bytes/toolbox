@@ -20,17 +20,13 @@ func (mux *MuxBroker) HandleFunc(pattern string, handler func(msg *Message)) {
 
 func (mux *MuxBroker) Subscribe() error {
 	ctx := context.Background()
+
 	for subject, handler := range mux.handlers {
-		_, err := mux.broker.Subscribe(ctx, subject, func(msg []byte) error {
-			handler(&Message{
-				Subject: subject,
-				Data:    msg,
-			})
-			return nil
-		})
+		_, err := mux.broker.Subscribe(ctx, subject, handler)
 		if err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
