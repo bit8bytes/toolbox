@@ -1,17 +1,22 @@
 package middleware
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"net/http"
 
 	"github.com/bit8bytes/toolbox/logger"
+	"github.com/bit8bytes/toolbox/uuid"
 )
 
 type Middleware interface {
 	LogRequest(next http.Handler) http.Handler
 	RecoverPanic(next http.Handler) http.Handler
+	AddTraceID(next http.Handler) http.Handler
 }
+
+const TraceIDKey = "trace_id"
 
 type middlewares func(http.Handler) http.Handler
 
@@ -55,5 +60,17 @@ func (m *middleware) RecoverPanic(next http.Handler) http.Handler {
 			}
 		}()
 		next.ServeHTTP(w, r)
+	})
+}
+
+func (m *middleware) AddTraceID(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		traceID, err := uuid.New()
+		if err != nil {
+			// fallback to prevent middleware from failing
+			traceID = uuid.UUID([]byte("unkown"))
+		}
+		ctx := context.WithValue(r.Context(), TraceIDKey, traceID)
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
