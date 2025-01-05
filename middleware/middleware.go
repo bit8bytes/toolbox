@@ -74,3 +74,17 @@ func (m *middleware) AddTraceID(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
+
+func (m *middleware) AddTraceIDFromXRequestIdHeader(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		traceIDFromHeader := r.Header.Get("X-Request-Id")
+
+		var traceID string
+		if traceIDFromHeader != "" {
+			traceID = "no-x-request-id-header-provided"
+		}
+
+		ctx := context.WithValue(r.Context(), TraceIDKey, traceID)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
