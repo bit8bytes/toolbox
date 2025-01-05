@@ -41,7 +41,15 @@ func (m *middleware) Chain(middlewares ...middlewares) middlewares {
 
 func (m *middleware) LogRequest(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		traceID := "unknown"
+		if traceIDValue := r.Context().Value(TraceIDKey); traceIDValue != nil {
+			if tid, ok := traceIDValue.(string); ok {
+				traceID = tid
+			}
+		}
+
 		m.logger.Info("received request",
+			slog.String("trace_id", traceID),
 			slog.String("host", r.Host),
 			slog.String("proto", r.Proto),
 			slog.String("method", r.Method),
