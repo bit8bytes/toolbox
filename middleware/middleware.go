@@ -41,12 +41,7 @@ func (m *middleware) Chain(middlewares ...middlewares) middlewares {
 
 func (m *middleware) LogRequest(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		traceID := "unknown"
-		if traceIDValue := r.Context().Value(TraceIDKey); traceIDValue != nil && traceIDValue == "" {
-			if tid, ok := traceIDValue.(string); ok {
-				traceID = tid
-			}
-		}
+		traceID := extractTraceIDFromXRequestHeader(r)
 
 		m.logger.Info("received request",
 			slog.String("trace_id", traceID),
@@ -85,14 +80,20 @@ func (m *middleware) AddTraceID(next http.Handler) http.Handler {
 
 func (m *middleware) AddTraceIDFromXRequestIdHeader(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		traceIDFromHeader := r.Header.Get("X-Request-Id")
-
-		var traceID string
-		if traceIDFromHeader == "" {
-			traceID = "no-x-request-id-header-provided"
-		}
+		traceID := extractTraceIDFromXRequestHeader(r)
 
 		ctx := context.WithValue(r.Context(), TraceIDKey, traceID)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
+}
+
+func extractTraceIDFromXRequestHeader(r *http.Request) string {
+	traceIDFromHeader := r.Header.Get("X-Request-Id")
+
+	var traceID string
+	if traceIDFromHeader == "" {
+		traceID = "no-x-request-id-header-provided"
+		return traceID
+	}
+	return traceID
 }
