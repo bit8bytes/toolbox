@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"strings"
 
 	"github.com/bit8bytes/toolbox/logger"
 	"github.com/bit8bytes/toolbox/uuid"
@@ -16,7 +17,14 @@ type Middleware interface {
 	AddTraceID(next http.Handler) http.Handler
 }
 
-const TraceIDKey = "trace_id"
+const (
+	TraceIDKey = "trace_id"
+	SubKey     = "sub"
+	NameKey    = "name"
+	EmailKey   = "email"
+	PictureKey = "picture"
+	RolesKey   = "roles"
+)
 
 type middlewares func(http.Handler) http.Handler
 
@@ -94,4 +102,35 @@ func extractTraceIDFromXRequestHeader(r *http.Request) string {
 		break
 	}
 	return traceID
+}
+
+func (mw *middleware) AddUserInfoFromHeader(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		ctx = context.WithValue(ctx, SubKey, "no-x-sub-provided")
+		ctx = context.WithValue(ctx, EmailKey, "no-x-email-provided")
+		ctx = context.WithValue(ctx, NameKey, "no-x-name-provided")
+		ctx = context.WithValue(ctx, PictureKey, "no-x-picture-provided")
+		ctx = context.WithValue(ctx, RolesKey, "no-x-roles-provided")
+
+		for key, values := range r.Header {
+			if len(values) > 0 {
+				switch key {
+				case "X-Sub":
+					ctx = context.WithValue(ctx, SubKey, values[0])
+				case "X-Email":
+					ctx = context.WithValue(ctx, EmailKey, values[0])
+				case "X-Name":
+					ctx = context.WithValue(ctx, NameKey, values[0])
+				case "X-Picture":
+					ctx = context.WithValue(ctx, PictureKey, values[0])
+				case "X-Roles":
+					roles := strings.Split(values[0], ",")
+					ctx = context.WithValue(ctx, RolesKey, roles)
+				}
+			}
+		}
+
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
 }
