@@ -88,12 +88,10 @@ func (m *middleware) AddTraceIDFromXRequestIdHeader(next http.Handler) http.Hand
 }
 
 func extractTraceIDFromXRequestHeader(r *http.Request) string {
-	traceIDFromHeader := r.Header.Get("X-Request-Id")
-
-	var traceID string
-	if traceIDFromHeader == "" {
-		traceID = "no-x-request-id-header-provided"
-		return traceID
+	traceID := "no-x-request-id-header-provided"
+	for _, value := range r.Header["X-Request-Id"] {
+		traceID = value
+		break
 	}
 	return traceID
 }
