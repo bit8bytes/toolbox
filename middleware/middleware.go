@@ -10,9 +10,22 @@ type Middleware interface {
 	Chain(middlewares ...middlewares) middlewares
 	LogRequest(next http.Handler) http.Handler
 	RecoverPanic(next http.Handler) http.Handler
+
 	AddTraceIdFromHeaderToContext(next http.Handler) http.Handler
-	AddUserInfoFromHeaderToContext(next http.Handler) http.Handler
-	AddOrgIdFromHeaderToContext(next http.Handler) http.Handler
+	GetTraceIdFromContext(r *http.Request) string
+
+	AddOrgIdForUserFromHeaderToContext(next http.Handler) http.Handler
+	GetOrgIdForUserFromContext(r *http.Request) string
+	AddUserSubFromHeaderToContext(next http.Handler) http.Handler
+	GetUserSubFromContext(r *http.Request) string
+	AddUserNameFromHeaderToContext(next http.Handler) http.Handler
+	GetUserNameFromContext(r *http.Request) string
+	AddUserNicknameFromHeaderToContext(next http.Handler) http.Handler
+	GetUserNicknameFromContext(r *http.Request) string
+	AddUserEmailFromHeaderToContext(next http.Handler) http.Handler
+	GetUserEmailFromContext(r *http.Request) string
+	AddUserPictureFromHeaderToContext(next http.Handler) http.Handler
+	GetUserPictureFromContext(r *http.Request) string
 }
 
 type middlewares func(http.Handler) http.Handler

@@ -7,18 +7,20 @@ import (
 
 func (m *middleware) AddTraceIdFromHeaderToContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		traceId := extractTraceIdFromXRequestHeader(r)
-
+		traceId := getTraceIdFromHeader(r)
 		ctx := context.WithValue(r.Context(), TraceIdKey, traceId)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
-func extractTraceIdFromXRequestHeader(r *http.Request) string {
-	traceId := "no-x-request-id-header-provided"
-	for _, value := range r.Header["X-Request-Id"] {
-		traceId = value
-		break
+func (m *middleware) GetTraceIdFromContext(r *http.Request) string {
+	traceId := r.Context().Value(TraceIdKey).(string)
+	if traceId == "" {
+		traceId = "no-x-request-id"
 	}
 	return traceId
+}
+
+func getTraceIdFromHeader(r *http.Request) string {
+	return r.Header.Get("X-Request-Id")
 }

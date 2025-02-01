@@ -3,62 +3,84 @@ package middleware
 import (
 	"context"
 	"net/http"
-	"strings"
 )
 
-// Available user info: sub, name, nickname, email, email verified, picture, roles.
-// Usage: i.e. middleware.SubKey
-func (mw *middleware) AddUserInfoFromHeaderToContext(next http.Handler) http.Handler {
+func (m *middleware) AddUserSubFromHeaderToContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-		ctx = context.WithValue(ctx, SubKey, "no-x-sub-provided")
-		ctx = context.WithValue(ctx, NameKey, "no-x-name-provided")
-		ctx = context.WithValue(ctx, NicknameKey, "no-x-nickname-provided")
-		ctx = context.WithValue(ctx, EmailKey, "no-x-email-provided")
-		ctx = context.WithValue(ctx, EmailVerifiedKey, "no-x-email-verified-provided")
-		ctx = context.WithValue(ctx, PictureKey, "no-x-picture-provided")
-		ctx = context.WithValue(ctx, RolesKey, "no-x-roles-provided")
-
-		for key, values := range r.Header {
-			if len(values) > 0 {
-				switch key {
-				case "X-sub":
-					ctx = context.WithValue(ctx, SubKey, values[0])
-				case "X-name":
-					ctx = context.WithValue(ctx, NameKey, values[0])
-				case "X-nickname":
-					ctx = context.WithValue(ctx, NicknameKey, values[0])
-				case "X-email":
-					ctx = context.WithValue(ctx, EmailKey, values[0])
-				case "X-email-verified":
-					ctx = context.WithValue(ctx, EmailVerifiedKey, values[0])
-				case "X-picture":
-					ctx = context.WithValue(ctx, PictureKey, values[0])
-				case "X-roles":
-					roles := strings.Split(values[0], ",")
-					ctx = context.WithValue(ctx, RolesKey, roles)
-				}
-			}
-		}
-
+		sub := r.Header.Get("X-Sub")
+		ctx := context.WithValue(r.Context(), SubKey, sub)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
-func (mw *middleware) AddOrgIdFromHeaderToContext(next http.Handler) http.Handler {
+func (m *middleware) AddUserNameFromHeaderToContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		orgId := extractOrgIdFromXHeader(r)
-
-		ctx := context.WithValue(r.Context(), OrgIdKey, orgId)
+		name := r.Header.Get("X-Name")
+		ctx := context.WithValue(r.Context(), NameKey, name)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
-func extractOrgIdFromXHeader(r *http.Request) string {
-	orgId := "no-x-request-org-id-header-provided"
-	for _, value := range r.Header["X-org-id"] {
-		orgId = value
-		break
+func (m *middleware) AddUserNicknameFromHeaderToContext(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		nickname := r.Header.Get("X-Nickname")
+		ctx := context.WithValue(r.Context(), NicknameKey, nickname)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+func (m *middleware) AddUserEmailFromHeaderToContext(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		email := r.Header.Get("X-Email")
+		ctx := context.WithValue(r.Context(), EmailKey, email)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+func (m *middleware) AddUserPictureFromHeaderToContext(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		picture := r.Header.Get("X-Picture")
+		ctx := context.WithValue(r.Context(), PictureKey, picture)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+func (m *middleware) GetUserSubFromContext(r *http.Request) string {
+	sub := r.Context().Value(SubKey).(string)
+	if sub == "" {
+		sub = "no-x-sub"
 	}
-	return orgId
+	return sub
+}
+
+func (m *middleware) GetUserNameFromContext(r *http.Request) string {
+	name := r.Context().Value(NameKey).(string)
+	if name == "" {
+		name = "no-name"
+	}
+	return name
+}
+
+func (m *middleware) GetUserNicknameFromContext(r *http.Request) string {
+	name := r.Context().Value(NicknameKey).(string)
+	if name == "" {
+		name = "no-x-nickname"
+	}
+	return name
+}
+
+func (m *middleware) GetUserEmailFromContext(r *http.Request) string {
+	email := r.Context().Value(EmailKey).(string)
+	if email == "" {
+		email = "no-x-email"
+	}
+	return email
+}
+
+func (m *middleware) GetUserPictureFromContext(r *http.Request) string {
+	picture := r.Context().Value(PictureKey).(string)
+	if picture == "" {
+		picture = "no-x-picture"
+	}
+	return picture
 }

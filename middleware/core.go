@@ -8,10 +8,10 @@ import (
 
 func (m *middleware) LogRequest(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		traceID := extractTraceIdFromXRequestHeader(r)
+		traceId := getTraceIdFromHeader(r)
 
 		m.logger.Info("received request",
-			slog.String("trace_id", traceID),
+			slog.String("trace_id", traceId),
 			slog.String("host", r.Host),
 			slog.String("proto", r.Proto),
 			slog.String("method", r.Method),
