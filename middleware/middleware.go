@@ -7,6 +7,7 @@ import (
 )
 
 type Middleware interface {
+	Chain(middlewares ...middlewares) middlewares
 	LogRequest(next http.Handler) http.Handler
 	RecoverPanic(next http.Handler) http.Handler
 	AddTraceIdFromHeaderToContext(next http.Handler) http.Handler
