@@ -27,10 +27,10 @@ type Middleware interface {
 	AddUserPictureFromHeaderToContext(next http.Handler) http.Handler
 	GetUserPictureFromContext(r *http.Request) string
 
-	AddTenantIdForUserFromHeaderToContext(next http.Handler) http.Handler
-	GetTenantIdForUserFromContext(r *http.Request) string
+	AddTenantIdFromHeaderToContext(next http.Handler) http.Handler
+	GetTenantIdFromContext(r *http.Request) string
 	AddTenantDisplayNameFromHeaderToContext(next http.Handler) http.Handler
-	GetTenantTenantNameFromContext(r *http.Request) string
+	GetTenantDisplayNameFromContext(r *http.Request) string
 }
 
 type middlewares func(http.Handler) http.Handler

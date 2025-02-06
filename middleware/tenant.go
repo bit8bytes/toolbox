@@ -12,7 +12,7 @@ const (
 	ErrTenantDisplayNameRequired = "Tenant display name is required"
 )
 
-func (middleware *middleware) AddTenantIdForUserFromHeaderToContext(next http.Handler) http.Handler {
+func (middleware *middleware) AddTenantIdFromHeaderToContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		tenantId := r.Header.Get(TenantIdHeader)
 		if tenantId == "" {
@@ -25,7 +25,7 @@ func (middleware *middleware) AddTenantIdForUserFromHeaderToContext(next http.Ha
 	})
 }
 
-func (middleware *middleware) GetTenantIdForUserFromContext(r *http.Request) string {
+func (middleware *middleware) GetTenantIdFromContext(r *http.Request) string {
 	return r.Context().Value(TenantIdKey).(string)
 }
 
@@ -42,6 +42,6 @@ func (middleware *middleware) AddTenantDisplayNameFromHeaderToContext(next http.
 	})
 }
 
-func (middleware *middleware) GetTenantTenantNameFromContext(r *http.Request) string {
+func (middleware *middleware) GetTenantDisplayNameFromContext(r *http.Request) string {
 	return r.Context().Value(TenantDisplayNameKey).(string)
 }
