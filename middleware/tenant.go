@@ -6,14 +6,19 @@ import (
 )
 
 const (
-	TenantIdHeader               = "X-Tenant-Id"
-	TenantDisplayNameHeader      = "X-Tenant-Display-Name"
-	ErrTenantIdRequired          = "Tenant ID is required"
-	ErrTenantDisplayNameRequired = "Tenant display name is required"
+	TenantIdHeader               string = "X-tenant-id"
+	TenantDisplayNameHeader      string = "X-tenant-display-name"
+	ErrTenantIdRequired          string = "Tenant ID is required"
+	ErrTenantDisplayNameRequired string = "Tenant display name is required"
 )
 
 func (middleware *middleware) AddTenantIdFromHeaderToContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if middleware.excluded.MatchString(r.URL.Path) {
+			next.ServeHTTP(w, r)
+			return
+		}
+
 		tenantId := r.Header.Get(TenantIdHeader)
 		if tenantId == "" {
 			http.Error(w, ErrTenantIdRequired, http.StatusBadRequest)
@@ -31,6 +36,11 @@ func (middleware *middleware) GetTenantIdFromContext(r *http.Request) string {
 
 func (middleware *middleware) AddTenantDisplayNameFromHeaderToContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if middleware.excluded.MatchString(r.URL.Path) {
+			next.ServeHTTP(w, r)
+			return
+		}
+
 		tenantDisplayName := r.Header.Get(TenantDisplayNameHeader)
 		if tenantDisplayName == "" {
 			http.Error(w, ErrTenantDisplayNameRequired, http.StatusBadRequest)

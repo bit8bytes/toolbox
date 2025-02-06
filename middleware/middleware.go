@@ -2,12 +2,14 @@ package middleware
 
 import (
 	"net/http"
+	"regexp"
 
 	"github.com/bit8bytes/toolbox/logger"
 )
 
 type Middleware interface {
 	Chain(middlewares ...middlewares) middlewares
+	Exclude(excluded *regexp.Regexp)
 	LogRequest(next http.Handler) http.Handler
 	RecoverPanic(next http.Handler) http.Handler
 
@@ -36,7 +38,8 @@ type Middleware interface {
 type middlewares func(http.Handler) http.Handler
 
 type middleware struct {
-	logger logger.Logger
+	logger   logger.Logger
+	excluded *regexp.Regexp
 }
 
 func NewMiddleware(l logger.Logger) *middleware {
@@ -52,4 +55,9 @@ func (m *middleware) Chain(middlewares ...middlewares) middlewares {
 		}
 		return final
 	}
+}
+
+// Exclude sets the regular expression to exclude certain paths from the middleware
+func (m *middleware) Exclude(excluded *regexp.Regexp) {
+	m.excluded = excluded
 }
