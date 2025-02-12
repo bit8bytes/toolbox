@@ -125,7 +125,7 @@ func (h *HttpResponder) errorResponse(w http.ResponseWriter, r *http.Request, st
 
 func (h *HttpResponder) ServerErrorResponse(w http.ResponseWriter, r *http.Request, err error) {
 	h.logError(r, err)
-	h.errorResponse(w, r, http.StatusInternalServerError, err)
+	h.errorResponse(w, r, http.StatusInternalServerError, err.Error())
 }
 
 func (h *HttpResponder) BadRequestResponse(w http.ResponseWriter, r *http.Request, err error) {
