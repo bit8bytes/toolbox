@@ -1,4 +1,4 @@
-//go:build !local
+//go:build local
 
 package middleware
 
@@ -23,8 +23,7 @@ func (middleware *middleware) AddTenantIdFromHeaderToContext(next http.Handler) 
 
 		tenantId := r.Header.Get(TenantIdHeader)
 		if tenantId == "" {
-			http.Error(w, ErrTenantIdRequired, http.StatusBadRequest)
-			return
+			tenantId = "no-x-tenant-id-local"
 		}
 
 		ctx := context.WithValue(r.Context(), TenantIdKey, tenantId)
@@ -45,7 +44,7 @@ func (middleware *middleware) AddTenantDisplayNameFromHeaderToContext(next http.
 
 		tenantDisplayName := r.Header.Get(TenantDisplayNameHeader)
 		if tenantDisplayName == "" {
-			http.Error(w, ErrTenantDisplayNameRequired, http.StatusBadRequest)
+			tenantDisplayName = "no-x-tenant-display-name-local"
 			return
 		}
 
