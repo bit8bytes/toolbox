@@ -3,6 +3,7 @@ package middleware
 import (
 	"context"
 	"net/http"
+	"strings"
 )
 
 const (
@@ -18,10 +19,11 @@ func (m *middleware) AddRolesFromHeaderToContext(next http.Handler) http.Handler
 	})
 }
 
-func (m *middleware) GetRoles(r *http.Request) string {
-	roles := r.Context().Value(RolesKey).(string)
-	if roles == "" {
-		roles = NoRolesHeader
+func (m *middleware) GetRoles(r *http.Request) []string {
+	ctxRoles := r.Context().Value(RolesKey).(string)
+	roles := strings.Split(ctxRoles, ",")
+	if len(roles) == 0 {
+		roles = []string{}
 	}
 	return roles
 }

@@ -35,7 +35,7 @@ type Middleware interface {
 	GetTenantDisplayNameFromContext(r *http.Request) string
 
 	AddRolesFromHeaderToContext(next http.Handler) http.Handler
-	GetRoles(r *http.Request) string
+	GetRoles(r *http.Request) []string
 }
 
 type middlewares func(http.Handler) http.Handler
