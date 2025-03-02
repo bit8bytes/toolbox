@@ -36,6 +36,8 @@ type Middleware interface {
 
 	AddRolesFromHeaderToContext(next http.Handler) http.Handler
 	GetRoles(r *http.Request) []string
+
+	Gzip(next http.Handler) http.Handler
 }
 
 type middlewares func(http.Handler) http.Handler
