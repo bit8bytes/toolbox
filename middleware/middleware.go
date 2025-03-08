@@ -38,8 +38,6 @@ type Middleware interface {
 	GetRoles(r *http.Request) []string
 
 	Gzip(next http.Handler) http.Handler
-
-	RequirePermission(permission string, handler http.HandlerFunc) http.HandlerFunc
 }
 
 type middlewares func(http.Handler) http.Handler
