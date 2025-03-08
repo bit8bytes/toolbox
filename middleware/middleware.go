@@ -12,10 +12,8 @@ type Middleware interface {
 	Exclude(excluded *regexp.Regexp)
 	LogRequest(next http.Handler) http.Handler
 	RecoverPanic(next http.Handler) http.Handler
-
 	AddTraceIdFromHeaderToContext(next http.Handler) http.Handler
 	GetTraceIdFromContext(r *http.Request) string
-
 	AddOrgIdForUserFromHeaderToContext(next http.Handler) http.Handler
 	GetOrgIdForUserFromContext(r *http.Request) string
 	AddUserSubFromHeaderToContext(next http.Handler) http.Handler
@@ -28,15 +26,12 @@ type Middleware interface {
 	GetUserEmailFromContext(r *http.Request) string
 	AddUserPictureFromHeaderToContext(next http.Handler) http.Handler
 	GetUserPictureFromContext(r *http.Request) string
-
 	AddTenantIdFromHeaderToContext(next http.Handler) http.Handler
 	GetTenantIdFromContext(r *http.Request) string
 	AddTenantDisplayNameFromHeaderToContext(next http.Handler) http.Handler
 	GetTenantDisplayNameFromContext(r *http.Request) string
-
 	AddRolesFromHeaderToContext(next http.Handler) http.Handler
 	GetRoles(r *http.Request) []string
-
 	Gzip(next http.Handler) http.Handler
 }
 
