@@ -38,6 +38,8 @@ type Middleware interface {
 	GetRoles(r *http.Request) []string
 
 	Gzip(next http.Handler) http.Handler
+
+	RequirePermission(permission string, handler http.HandlerFunc) http.HandlerFunc
 }
 
 type middlewares func(http.Handler) http.Handler
@@ -55,10 +57,18 @@ func NewMiddleware(l logger.Logger) *middleware {
 
 func (m *middleware) Chain(middlewares ...middlewares) middlewares {
 	return func(final http.Handler) http.Handler {
+		chain := final
 		for i := len(middlewares) - 1; i >= 0; i-- {
-			final = middlewares[i](final)
+			chain = middlewares[i](chain)
 		}
-		return final
+
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if m.excluded.MatchString(r.URL.Path) {
+				final.ServeHTTP(w, r)
+			} else {
+				chain.ServeHTTP(w, r)
+			}
+		})
 	}
 }
 
