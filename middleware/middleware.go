@@ -7,6 +7,20 @@ import (
 	"github.com/bit8bytes/toolbox/logger"
 )
 
+const (
+	TraceIdKey           = "trace_id"
+	SubKey               = "sub"
+	NameKey              = "name"
+	NicknameKey          = "nickname"
+	EmailKey             = "email"
+	EmailVerifiedKey     = "email_verified"
+	PictureKey           = "picture"
+	RolesKey             = "roles"
+	OrgIdKey             = "org_id"
+	TenantIdKey          = "tenant_id"
+	TenantDisplayNameKey = "tenant_display_name"
+)
+
 type Middleware interface {
 	Chain(middlewares ...middlewares) middlewares
 	Exclude(excluded *regexp.Regexp)
@@ -42,9 +56,10 @@ type middleware struct {
 	excluded *regexp.Regexp
 }
 
-func NewMiddleware(l logger.Logger) *middleware {
+func New(l logger.Logger) *middleware {
 	return &middleware{
-		logger: l,
+		logger:   l,
+		excluded: regexp.MustCompile("^$"),
 	}
 }
 
