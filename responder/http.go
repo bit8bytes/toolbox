@@ -128,6 +128,10 @@ func (h *HttpResponder) ServerErrorResponse(w http.ResponseWriter, r *http.Reque
 	h.errorResponse(w, r, http.StatusInternalServerError, err.Error())
 }
 
+func (h *HttpResponder) NotFound(w http.ResponseWriter, r *http.Request, err error) {
+	h.errorResponse(w, r, http.StatusNotFound, err.Error())
+}
+
 func (h *HttpResponder) BadRequestResponse(w http.ResponseWriter, r *http.Request, err error) {
 	h.errorResponse(w, r, http.StatusBadRequest, err.Error())
 }
