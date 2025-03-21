@@ -129,6 +129,7 @@ func (h *HttpResponder) ServerErrorResponse(w http.ResponseWriter, r *http.Reque
 }
 
 func (h *HttpResponder) NotFound(w http.ResponseWriter, r *http.Request, err error) {
+	h.logError(r, err)
 	h.errorResponse(w, r, http.StatusNotFound, err.Error())
 }
 
