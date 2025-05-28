@@ -4,9 +4,11 @@
 
 Toolbox is a collection of ultilities to make web easier again.
 
-It simplifies following components:
+It simplifies following utilities:
 
 - [Validator](/validator/validator.go)
-- [Version Control System (VCS)](/vcs/vcs.go)
+- [Version Control System (VCS)](/docs/EXAMPLES.md#vcs)
+- [Responder](/responder/responder.go)
+- [Middleware](/middleware/middleware.go)
 
 Created with purpose from @TobiasGleiter
