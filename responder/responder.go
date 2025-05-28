@@ -1,21 +1,37 @@
 package responder
 
-import "net/http"
+import (
+	"log/slog"
+	"net/http"
+)
 
 type Envelope map[string]any
 
-type Responder interface {
-	ReadJSON(w http.ResponseWriter, r *http.Request, dst any) error
-	WriteJSON(w http.ResponseWriter, status int, data Envelope, headers http.Header) error
+type Responder struct {
+	logger *slog.Logger
+}
 
-	ServerErrorResponse(w http.ResponseWriter, r *http.Request, err error)
-	BadRequestResponse(w http.ResponseWriter, r *http.Request, err error)
-	NotFound(w http.ResponseWriter, r *http.Request, err error)
-	FailedValidationResponse(w http.ResponseWriter, r *http.Request, errors map[string]string)
-	InvalidCredentialsResponse(w http.ResponseWriter, r *http.Request)
-	InvalidBearerAuthenticationTokenResponse(w http.ResponseWriter, r *http.Request)
-	InvalidCookieAuthenticationTokenResponse(w http.ResponseWriter, r *http.Request)
+func New(logger *slog.Logger) *Responder {
+	return &Responder{
+		logger: logger,
+	}
+}
 
-	logError(r *http.Request, err error)
-	errorResponse(w http.ResponseWriter, r *http.Request, status int, message any)
+func (h *Responder) LogError(r *http.Request, err error) {
+	var (
+		host   = r.Host
+		ip     = r.RemoteAddr
+		proto  = r.Proto
+		method = r.Method
+		uri    = r.URL.RequestURI()
+	)
+
+	h.logger.Error(
+		err.Error(),
+		slog.String("host", host),
+		slog.String("proto", proto),
+		slog.String("ip", ip),
+		slog.String("method", method),
+		slog.String("uri", uri),
+	)
 }

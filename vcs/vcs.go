@@ -1,3 +1,8 @@
+// Package vcs implements utility for working with version control systems.
+//
+// This package has only one function and can be called using vcs.Version()
+// The package vcs requires a version control system such as git and will
+// only work on a build binary.
 package vcs
 
 import (
@@ -5,6 +10,8 @@ import (
 	"runtime/debug"
 )
 
+// Func version return the time and revision.
+// If the revision is dirty, it will be appended with -dirty.
 func Version() string {
 	var (
 		time     string

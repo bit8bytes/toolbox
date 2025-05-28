@@ -1,86 +1,178 @@
 package middleware
 
 import (
+	"context"
+	"fmt"
+	"log/slog"
 	"net/http"
-	"regexp"
-
-	"github.com/bit8bytes/toolbox/logger"
+	"strings"
+	"time"
 )
+
+type contextKey string
 
 const (
-	TraceIdKey           = "trace_id"
-	SubKey               = "sub"
-	NameKey              = "name"
-	NicknameKey          = "nickname"
-	EmailKey             = "email"
-	EmailVerifiedKey     = "email_verified"
-	PictureKey           = "picture"
-	RolesKey             = "roles"
-	OrgIdKey             = "org_id"
-	TenantIdKey          = "tenant_id"
-	TenantDisplayNameKey = "tenant_display_name"
+	traceIDKey   contextKey = "trace_id"
+	userIDKey    contextKey = "user_id"
+	requestIDKey contextKey = "request_id"
 )
 
-type Middleware interface {
-	Chain(middlewares ...middlewares) middlewares
-	Exclude(excluded *regexp.Regexp)
-	LogRequest(next http.Handler) http.Handler
-	RecoverPanic(next http.Handler) http.Handler
-	AddTraceIdFromHeaderToContext(next http.Handler) http.Handler
-	GetTraceIdFromContext(r *http.Request) string
-	AddOrgIdForUserFromHeaderToContext(next http.Handler) http.Handler
-	GetOrgIdForUserFromContext(r *http.Request) string
-	AddUserSubFromHeaderToContext(next http.Handler) http.Handler
-	GetUserSubFromContext(r *http.Request) string
-	AddUserNameFromHeaderToContext(next http.Handler) http.Handler
-	GetUserNameFromContext(r *http.Request) string
-	AddUserNicknameFromHeaderToContext(next http.Handler) http.Handler
-	GetUserNicknameFromContext(r *http.Request) string
-	AddUserEmailFromHeaderToContext(next http.Handler) http.Handler
-	GetUserEmailFromContext(r *http.Request) string
-	AddUserPictureFromHeaderToContext(next http.Handler) http.Handler
-	GetUserPictureFromContext(r *http.Request) string
-	AddTenantIdFromHeaderToContext(next http.Handler) http.Handler
-	GetTenantIdFromContext(r *http.Request) string
-	AddTenantDisplayNameFromHeaderToContext(next http.Handler) http.Handler
-	GetTenantDisplayNameFromContext(r *http.Request) string
-	AddRolesFromHeaderToContext(next http.Handler) http.Handler
-	GetRoles(r *http.Request) []string
-	Gzip(next http.Handler) http.Handler
+type MiddlewareFunc func(http.Handler) http.Handler
+
+type Middleware struct {
+	logger         *slog.Logger
+	excludedPaths  map[string]bool
+	excludedPrefix []string
 }
 
-type middlewares func(http.Handler) http.Handler
+func New(logger *slog.Logger) *Middleware {
+	if logger == nil {
+		logger = slog.Default()
+	}
 
-type middleware struct {
-	logger   logger.Logger
-	excluded *regexp.Regexp
+	mw := &Middleware{
+		logger:         logger,
+		excludedPaths:  make(map[string]bool),
+		excludedPrefix: make([]string, 0),
+	}
+
+	return mw
 }
 
-func New(l logger.Logger) *middleware {
-	return &middleware{
-		logger:   l,
-		excluded: regexp.MustCompile("^$"),
+// Chain combines middlewares and returns a handler.
+// Build chain from right to left
+func (m *Middleware) Chain(middlewares ...MiddlewareFunc) MiddlewareFunc {
+	return func(handler http.Handler) http.Handler {
+		// Build chain from right to left
+		for i := len(middlewares) - 1; i >= 0; i-- {
+			handler = middlewares[i](handler)
+		}
+		return handler
 	}
 }
 
-func (m *middleware) Chain(middlewares ...middlewares) middlewares {
-	return func(final http.Handler) http.Handler {
-		chain := final
-		for i := len(middlewares) - 1; i >= 0; i-- {
-			chain = middlewares[i](chain)
+// ExcludePaths excludes exact path matches
+// Example: mw.ExcludePaths("/health")
+func (m *Middleware) ExcludePaths(paths ...string) {
+	for _, path := range paths {
+		m.excludedPaths[path] = true
+	}
+}
+
+// ExcludePrefixes excludes paths starting with given prefixes
+// Example: mw.ExcludePrefixes("/health/")
+func (m *Middleware) ExcludePrefixes(prefixes ...string) {
+	m.excludedPrefix = append(m.excludedPrefix, prefixes...)
+}
+
+// shouldSkip checks if request should skip middleware
+func (m *Middleware) ShouldSkip(r *http.Request) bool {
+	path := r.URL.Path
+
+	// Check exact path matches (O(1) lookup)
+	if m.excludedPaths[path] {
+		return true
+	}
+
+	// Check prefix matches (O(n) but typically very small n)
+	for _, prefix := range m.excludedPrefix {
+		if strings.HasPrefix(path, prefix) {
+			return true
+		}
+	}
+
+	return false
+}
+
+// LogRequest logs HTTP requests with response details
+func (m *Middleware) LogRequest(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if m.ShouldSkip(r) {
+			next.ServeHTTP(w, r)
+			return
 		}
 
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if m.excluded.MatchString(r.URL.Path) {
-				final.ServeHTTP(w, r)
-			} else {
-				chain.ServeHTTP(w, r)
-			}
-		})
-	}
+		start := time.Now()
+		traceID := getTraceID(r)
+
+		// Add trace ID to context
+		ctx := context.WithValue(r.Context(), traceIDKey, traceID)
+		r = r.WithContext(ctx)
+
+		// Wrap response writer to capture status and size
+		wrapped := &responseWriter{ResponseWriter: w, statusCode: http.StatusOK}
+
+		next.ServeHTTP(wrapped, r)
+
+		m.logger.Info("request",
+			slog.String("trace_id", traceID),
+			slog.String("method", r.Method),
+			slog.String("path", r.URL.Path),
+			slog.Int("status", wrapped.statusCode),
+			slog.Int("size", wrapped.size),
+			slog.Duration("duration", time.Since(start)),
+		)
+	})
 }
 
-// Exclude sets the regular expression to exclude certain paths from the middleware
-func (m *middleware) Exclude(excluded *regexp.Regexp) {
-	m.excluded = excluded
+// RecoverPanic recovers from panics
+func (m *Middleware) RecoverPanic(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if err := recover(); err != nil {
+				traceID := getTraceIDFromContext(r.Context())
+
+				m.logger.Error("panic recovered",
+					slog.String("trace_id", traceID),
+					slog.String("method", r.Method),
+					slog.String("path", r.URL.Path),
+					slog.Any("error", err),
+				)
+
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusInternalServerError)
+				fmt.Fprintf(w, `{"error":"internal server error","trace_id":"%s"}`, traceID)
+			}
+		}()
+
+		next.ServeHTTP(w, r)
+	})
+}
+
+// responseWriter captures response metadata
+type responseWriter struct {
+	http.ResponseWriter
+	statusCode int
+	size       int
+}
+
+func (rw *responseWriter) WriteHeader(code int) {
+	rw.statusCode = code
+	rw.ResponseWriter.WriteHeader(code)
+}
+
+func (rw *responseWriter) Write(data []byte) (int, error) {
+	size, err := rw.ResponseWriter.Write(data)
+	rw.size += size
+	return size, err
+}
+
+// Helper functions
+func getTraceID(r *http.Request) string {
+	headers := []string{"X-Trace-Id", "X-Request-Id", "X-Correlation-Id"}
+
+	for _, header := range headers {
+		if id := r.Header.Get(header); id != "" {
+			return id
+		}
+	}
+
+	return fmt.Sprintf("%d", time.Now().UnixNano())
+}
+
+func getTraceIDFromContext(ctx context.Context) string {
+	if id, ok := ctx.Value(traceIDKey).(string); ok {
+		return id
+	}
+	return "unknown"
 }
