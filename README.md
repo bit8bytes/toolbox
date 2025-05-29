@@ -2,13 +2,13 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Toolbox is a collection of ultilities to make web easier again.
+Toolbox is a collection of ultilities to make web easier again. Toolbox doesn't use any external dependencies except of Go's standard library.
 
 It simplifies following utilities:
 
-- [Validator](/validator/validator.go)
+- [Validator](/docs/EXAMPLES.md#validator)
 - [Version Control System (VCS)](/docs/EXAMPLES.md#vcs)
 - [Responder](/responder/responder.go)
 - [Middleware](/middleware/middleware.go)
 
-Created with purpose from @TobiasGleiter
+Created with purpose from by @bit8bytes from @TobiasGleiter
