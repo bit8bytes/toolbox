@@ -12,9 +12,9 @@ import (
 type contextKey string
 
 const (
-	traceIDKey   contextKey = "trace_id"
-	userIDKey    contextKey = "user_id"
-	requestIDKey contextKey = "request_id"
+	TraceIDKey   contextKey = "trace_id"
+	UserIDKey    contextKey = "user_id"
+	RequestIDKey contextKey = "request_id"
 )
 
 type MiddlewareFunc func(http.Handler) http.Handler
@@ -96,7 +96,7 @@ func (m *Middleware) LogRequest(next http.Handler) http.Handler {
 		traceID := getTraceID(r)
 
 		// Add trace ID to context
-		ctx := context.WithValue(r.Context(), traceIDKey, traceID)
+		ctx := context.WithValue(r.Context(), TraceIDKey, traceID)
 		r = r.WithContext(ctx)
 
 		// Wrap response writer to capture status and size
@@ -120,7 +120,7 @@ func (m *Middleware) RecoverPanic(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
-				traceID := getTraceIDFromContext(r.Context())
+				traceID := GetTraceIDFromContext(r.Context())
 
 				m.logger.Error("panic recovered",
 					slog.String("trace_id", traceID),
@@ -157,6 +157,14 @@ func (rw *responseWriter) Write(data []byte) (int, error) {
 	return size, err
 }
 
+// GetTraceIDFromContext returns the trace id from the context
+func GetTraceIDFromContext(ctx context.Context) string {
+	if id, ok := ctx.Value(TraceIDKey).(string); ok {
+		return id
+	}
+	return "unknown"
+}
+
 // Helper functions
 func getTraceID(r *http.Request) string {
 	headers := []string{"X-Trace-Id", "X-Request-Id", "X-Correlation-Id"}
@@ -168,11 +176,4 @@ func getTraceID(r *http.Request) string {
 	}
 
 	return fmt.Sprintf("%d", time.Now().UnixNano())
-}
-
-func getTraceIDFromContext(ctx context.Context) string {
-	if id, ok := ctx.Value(traceIDKey).(string); ok {
-		return id
-	}
-	return "unknown"
 }
