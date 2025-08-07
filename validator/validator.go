@@ -32,6 +32,10 @@ func (v *Validator) Valid() bool {
 // AddError records a validation error for a field
 // Existing errors for the same field are preserved (no overwrite)
 func (v *Validator) AddError(key, message string) {
+	if v.Errors == nil {
+		v.Errors = make(map[string]string)
+	}
+
 	if _, exists := v.Errors[key]; !exists {
 		v.Errors[key] = message
 	}
@@ -68,7 +72,6 @@ func Unique[T comparable](values []T) bool {
 
 	return len(values) == len(uniqueValues)
 }
-
 
 // NotBlank returns true if value contains non-whitespace characters
 func NotBlank(value string) bool {
