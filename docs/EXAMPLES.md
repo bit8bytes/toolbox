@@ -32,9 +32,15 @@ If you run `go run .` the output will be just `-`. The version is only available
 
 ### JSON
 
-## validator
+## Validator
+
+Validator can be either used with HTML forms or as standalone.
 
 Install the validator package: `go get github.com/bit8bytes/toolbox/validator` and use it:
+
+### Standalone
+
+To use `validator` standalone you need to create a new Validator (`v := validator.New()`)
 
 ```go
 package main
@@ -75,4 +81,32 @@ Run `go run .`, the output will be:
 ```bash
 $ go run .
 key: name: msg: Name must be 'bit8bytes'
+```
+
+### With Forms
+
+To use `validator` with HTML forms you need to include the validator in your form struct.
+
+```go
+package main
+
+type form struct {
+	Name      string `form:"name"`
+	validator.Validator `form:"-"`
+}
+
+func postFormHandler(w http.ResponseWriter, r *http.Request) {
+	form := form{
+		Name:       r.PostForm.Get("name"),
+	}
+
+	form.Check(validator.NotBlank(tokenPlaintext), "name", "This field cannot be blank")
+
+	if !form.Valid() {
+		http.Error(w, "Validation failed!", http.StatusUnprocessableEntity)
+		return
+	}
+
+	w.Write([]byte("Validation passed!"))
+}
 ```
