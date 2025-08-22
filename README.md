@@ -1,6 +1,6 @@
 # Toolbox
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Test](https://github.com/bit8bytes/toolbox/actions/workflows/test.yml/badge.svg)](https://github.com/bit8bytes/toolbox/actions/workflows/test.yml)
 
 Toolbox is a collection of ultilities to make web easier again. Toolbox doesn't use any external dependencies except of Go's standard library.
 
