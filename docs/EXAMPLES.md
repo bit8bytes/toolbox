@@ -100,7 +100,7 @@ func postFormHandler(w http.ResponseWriter, r *http.Request) {
 		Name:       r.PostForm.Get("name"),
 	}
 
-	form.Check(validator.NotBlank(tokenPlaintext), "name", "This field cannot be blank")
+	form.Check(validator.NotBlank(form.Name), "name", "This field cannot be blank")
 
 	if !form.Valid() {
 		http.Error(w, "Validation failed!", http.StatusUnprocessableEntity)
