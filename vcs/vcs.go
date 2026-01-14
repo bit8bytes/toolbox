@@ -77,5 +77,5 @@ func VersionInt32() (int32, error) {
 		}
 	}
 
-	return 0, fmt.Errorf("vcs.revision not found in build info")
+	return 0, nil
 }
