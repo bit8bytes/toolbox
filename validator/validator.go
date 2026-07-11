@@ -78,6 +78,11 @@ func NotBlank(value string) bool {
 	return strings.TrimSpace(value) != ""
 }
 
+// NotNil returns true if the pointer is non-nil.
+func NotNil[T any](value *T) bool {
+    return value != nil
+}
+
 // MaxChars returns true if value has n characters or fewer
 func MaxChars(value string, n int) bool {
 	return utf8.RuneCountInString(value) <= n

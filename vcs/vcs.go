@@ -10,6 +10,13 @@ import (
 	"strconv"
 )
 
+// buildRevision can be set at link time via:
+//
+//	-X github.com/bit8bytes/toolbox/vcs.buildRevision=<git-sha>
+//
+// It is used as a fallback when VCS info is not embedded (e.g. Nix builds).
+var buildRevision string
+
 // Version returns build info as "time-revision-int" or "time-revision-int-dirty".
 // The integer is derived from the first 4 bytes of the git revision hash.
 func Version() string {
@@ -33,6 +40,10 @@ func Version() string {
 				}
 			}
 		}
+	}
+
+	if revision == "" && buildRevision != "" {
+		revision = buildRevision
 	}
 
 	revInt, err := revisionToInt(revision)
